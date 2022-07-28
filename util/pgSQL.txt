@@ -1,0 +1,52 @@
+
+CREATE DATABASE organization;
+
+CREATE TABLE employees(
+   id INT PRIMARY KEY     NOT NULL,
+   name           TEXT    NOT NULL,
+   age            INT     NOT NULL,
+   address        CHAR(50),
+   salary         REAL,
+   doj  DATE NOT NULL,
+   dept_id INTEGER NOT NULL REFERENCES department(ID)
+   
+);
+CREATE TABLE department(
+   ID INT PRIMARY KEY      NOT NULL,
+   DEPT           CHAR(50) NOT NULL,
+   EMP_COUNT         INT      NOT NULL
+)
+ALTER TABLE employees ADD dept_id  integer references department(id);
+
+insert into department values (1,'IT',2);
+
+insert into employees values (1, 'Lalit', 23, 'ishanpur, ahmedabad', 23244.02, '2020-12-14', 1)
+
+CREATE TRIGGER emp_count_trigger AFTER INSERT ON employees
+FOR EACH ROW EXECUTE PROCEDURE inc_count();
+
+CREATE OR REPLACE FUNCTION inc_count() RETURNS TRIGGER AS $example_table$
+   BEGIN
+      UPDATE department SET EMP_COUNT = EMP_COUNT + 1 
+        WHERE ID = new.dept_id;
+      RETURN NEW;
+   END;
+$example_table$ LANGUAGE plpgsql;
+
+select * from employees where dept_id = 1 order by doj asc;
+
+select count(ID) from employees where dept_id = new.dept_id;
+
+select * from employees where dept_id = 1 and doj between '2022-01-01
+' and '2022-07-01' order by doj desc;
+
+CREATE OR REPLACE FUNCTION employeesByDept (dept_id integer, start_date date, end_date date)
+RETURNS SETOF employees as 
+$func$
+BEGIN
+    RETURN query
+   select * from employees where dept_id = dept_id and doj between start_date and end_date order by doj desc;
+END  
+$func$ LANGUAGE plpgsql;
+
+
